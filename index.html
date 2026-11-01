@@ -27,7 +27,7 @@
     background:var(--page);
     min-height:100vh;
     display:flex;align-items:center;justify-content:center;
-    padding:32px 16px;
+    padding:32px 16px 88px; /* room so the music button never covers the card's last buttons */
     overflow-x:hidden;
   }
 
@@ -52,7 +52,7 @@
   /* ---------- Content ---------- */
   .content{
     position:relative;z-index:2;text-align:center;
-    padding:34cqw 17cqw 40cqw;
+    padding:63cqw 17cqw 40cqw;
   }
   .pill{
     display:inline-block;background:var(--coral);color:var(--white);
@@ -75,6 +75,13 @@
   .place{font-weight:900;font-size:4.6cqw;text-transform:uppercase;letter-spacing:.03em}
   .small{font-weight:700;font-size:3.5cqw;opacity:.85;margin-top:1cqw;line-height:1.35}
   .countdown{font-weight:800;font-size:3.5cqw;color:var(--peach);margin-top:3cqw}
+
+  .gift{margin-top:4.5cqw;border:2px dashed var(--peach);border-radius:4cqw;padding:3cqw 3.5cqw}
+  .gift-title{font-weight:900;font-size:4cqw;text-transform:uppercase;letter-spacing:.06em;color:var(--peach)}
+  .gift-ico{display:inline-block;animation:giftWiggle 2.4s ease-in-out infinite}
+  @keyframes giftWiggle{0%,60%,100%{transform:rotate(0) scale(1)}70%{transform:rotate(-14deg) scale(1.15)}80%{transform:rotate(12deg) scale(1.15)}90%{transform:rotate(-6deg)}}
+  .gift-text{font-weight:700;font-size:3.6cqw;margin-top:1cqw;line-height:1.35}
+  .gift-text b{color:var(--peach);font-weight:900;font-size:4.4cqw}
 
   .actions{display:flex;flex-direction:column;gap:2.6cqw;align-items:center;margin-top:4.5cqw}
   .btn{
@@ -102,7 +109,7 @@
   .balloons .b2{animation:float 4.6s ease-in-out infinite .6s;transform-origin:50% 100%}
   @keyframes float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3%) rotate(3deg)}}
 
-  .elephant{top:0;right:6cqw;width:31cqw;animation:peek 4s ease-in-out infinite;transform-origin:50% 0}
+  .elephant{top:0;right:1cqw;width:64cqw;animation:peek 4s ease-in-out infinite;transform-origin:50% 0}
   @keyframes peek{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
   .elephant .ear-l{transform-origin:85% 40%;animation:earL 1.6s ease-in-out infinite}
   .elephant .ear-r{transform-origin:15% 40%;animation:earR 1.6s ease-in-out infinite}
@@ -288,13 +295,19 @@
     <h2 class="script name" id="babyName" aria-label="Mateo Gaitán"></h2>
 
     <div class="date">06 . 12 . 2026</div>
-    <div class="sub" id="dayLine">Domingo</div>
+    <div class="sub">Domingo</div>
+    <div class="sub">9:00 a.m. – 12:00 p.m.</div>
     <div class="countdown" id="countdown"></div>
 
     <div class="dots"></div>
 
     <div class="place">Hug A Mug · Coffee &amp; Wine Place</div>
     <div class="small">9a Avenida 15-16, Zona 10, Ciudad de Guatemala</div>
+
+    <div class="gift">
+      <div class="gift-title"><span class="gift-ico" aria-hidden="true">🎁</span> Contribución</div>
+      <div class="gift-text">Te pedimos una contribución de <b>Q100</b> más tu regalo para el baby shower</div>
+    </div>
 
     <div class="actions">
       <div class="rsvp-note">Confirma tu asistencia al <b>+502 5514 5472</b></div>
@@ -337,9 +350,7 @@
   // ====== Editable details ======
   const EVENT = {
     baby: 'Mateo Gaitán',
-    date: new Date('2026-12-06T10:00:00-06:00'), // Guatemala time (UTC-6); hour still to be confirmed
-    showTime: false,        // set to true and adjust timeLabel to show the hour
-    timeLabel: '10:00 a.m.',
+    date: new Date('2026-12-06T09:00:00-06:00'), // Guatemala time (UTC-6)
     phone: '50255145472'
   };
 
@@ -369,8 +380,6 @@
     l.setAttribute('aria-hidden', 'true');
     nameEl.appendChild(l);
   });
-
-  if (EVENT.showTime) document.getElementById('dayLine').textContent = 'Domingo · ' + EVENT.timeLabel;
 
   // ====== Illustrations: pop in, then start their loop animation ======
   document.querySelectorAll('.art.pop').forEach((el, i) => {
@@ -416,7 +425,8 @@
   setTimeout(() => confetti(70), 900);
 
   // ====== Gentle lullaby (Web Audio, no external file) ======
-  let audioCtx, musicTimer, musicOn = false;
+  // Each play session gets its own master gain; disconnecting it silences notes already scheduled
+  let audioCtx, master, musicTimer, musicOn = false;
   const melody = [ // "Twinkle twinkle" style notes (public domain)
     523, 523, 784, 784, 880, 880, 784, 0, 698, 698, 659, 659, 587, 587, 523, 0
   ];
@@ -428,7 +438,7 @@
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(0.12, t + 0.03);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
-    o.connect(g).connect(audioCtx.destination);
+    o.connect(g).connect(master);
     o.start(t); o.stop(t + 0.5);
   }
   function loopMelody() {
@@ -440,10 +450,13 @@
     const btn = document.getElementById('music');
     musicOn = typeof force === 'boolean' ? force : !musicOn;
     clearTimeout(musicTimer);
+    if (master) { master.disconnect(); master = null; }
     try {
       if (musicOn) {
         audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
         audioCtx.resume();
+        master = audioCtx.createGain();
+        master.connect(audioCtx.destination);
         loopMelody();
       }
     } catch (e) { musicOn = false; }
