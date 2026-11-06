@@ -167,11 +167,11 @@
   .sheet h2{font-family:'Dancing Script',cursive;font-size:36px;margin-bottom:4px}
   .sheet p{font-weight:700;opacity:.85;margin-bottom:16px}
   .sheet form{display:grid;gap:10px}
-  .sheet input,.sheet select{
+  .sheet input{
     width:100%;padding:12px 14px;border-radius:14px;border:2px solid transparent;
     font:700 16px 'Nunito',sans-serif;color:var(--navy);background:#fff;
   }
-  .sheet input:focus,.sheet select:focus{outline:none;border-color:var(--peach)}
+  .sheet input:focus{outline:none;border-color:var(--peach)}
   .sheet .btn{font-size:15px;padding:13px 20px;margin-top:4px}
   .btn-wa{background:var(--green);color:#fff;box-shadow:0 4px 0 #179c4a}
   .close{background:none;border:none;color:#fff;opacity:.7;font:700 14px 'Nunito',sans-serif;margin-top:12px;cursor:pointer;text-decoration:underline}
@@ -369,14 +369,6 @@
     <p>Te abriremos WhatsApp con tu mensaje listo para enviar al +502 4944 6673</p>
     <form id="rsvpForm">
       <input id="guestName" type="text" placeholder="Tu nombre" autocomplete="name" required>
-      <select id="guestCount" aria-label="Número de personas">
-        <option value="1">Asistiré solo/a</option>
-        <option value="2">Seremos 2 personas</option>
-        <option value="3">Seremos 3 personas</option>
-        <option value="4">Seremos 4 personas</option>
-        <option value="5">Seremos 5 o más</option>
-        <option value="0">No podré asistir 😢</option>
-      </select>
       <button class="btn btn-wa" type="submit">Enviar por WhatsApp</button>
     </form>
     <button class="close" id="closeRsvp" type="button">Cerrar</button>
@@ -412,7 +404,7 @@
   [...EVENT.honorees].forEach((ch, i) => {
     const l = document.createElement('span');
     l.className = 'l';
-    l.textContent = ch === ' ' ? ' ' : ch;
+    l.textContent = ch === ' ' ? ' ' : ch;
     l.style.animationDelay = (i * .1) + 's';
     l.setAttribute('aria-hidden', 'true');
     nameEl.appendChild(l);
@@ -523,14 +515,8 @@
   document.getElementById('rsvpForm').addEventListener('submit', e => {
     e.preventDefault();
     const name = document.getElementById('guestName').value.trim();
-    const count = document.getElementById('guestCount').value;
-    let msg;
-    if (count === '0') {
-      msg = `¡Hola! Soy ${name}. Lamentablemente no podré asistir al Baby Shower de ${EVENT.honorees} 😢 ¡Les deseo lo mejor! 💙`;
-    } else {
-      const who = count === '1' ? 'asistiré' : `asistiremos ${count === '5' ? '5 o más' : count} personas`;
-      msg = `¡Hola! Soy ${name} y confirmo que ${who} al Baby Shower de ${EVENT.honorees} el domingo 6 de diciembre 💙🍼`;
-    }
+    const msg = `¡Hola! Soy ${name} y confirmo mi asistencia al Baby Shower de ${EVENT.honorees} el domingo 6 de diciembre 💙🍼`;
+    
     confetti(60);
     modal.classList.remove('open');
     setTimeout(() => window.open(`https://wa.me/${EVENT.phone}?text=${encodeURIComponent(msg)}`, '_blank'), 400);
